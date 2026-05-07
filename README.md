@@ -272,18 +272,12 @@ app/
     explore.tsx        Search + filter all items
     activity.tsx       Notifications with read/unread state
     profile.tsx        Profile, subscription badge, sign out
-  detail/
-    [id].tsx           Item detail — tasks, metrics, status
 
 contexts/
   SubscriptionContext.tsx   isPremium + purchase/restore/refresh
   ToastContext.tsx          useToast() — show toasts from anywhere
 
 hooks/
-  useItems.ts          Items list + single item + item tasks
-  useNotifications.ts  User notifications
-  useProfile.ts        Authenticated user profile
-  useActivityFeed.ts   Activity feed (optional item filter)
 
 lib/
   constants.ts         🏷️ APP_NAME, APP_SCHEME, support contacts — rebrand here
@@ -304,7 +298,6 @@ components/
     Button.tsx         primary / secondary / outline / ghost / destructive
     Card.tsx           Generic surface card
     AppModal.tsx       AlertModal (bottom sheet) + ActionSheet
-    StatusBadge.tsx    Status pill — active / pending / archived
     SettingsRow.tsx    Icon + label row for settings/profile lists
     TextInputField.tsx Styled text input with optional label + error
   TabBar.tsx           Custom animated bottom tab bar
