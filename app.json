@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "MyApp",
-    "slug": "my-app",
+    "name": "AI Town",
+    "slug": "ai-town-virtual-world",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "myapp",
+    "scheme": "aitown",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
@@ -14,13 +14,13 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.yourcompany.myapp",
+      "bundleIdentifier": "com.aitown.virtualworld",
       "associatedDomains": [
         "applinks:REPLACE_WITH_YOUR_DOMAIN"
       ]
     },
     "android": {
-      "package": "com.yourcompany.myapp",
+      "package": "com.aitown.virtualworld",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#0d0d0d"
@@ -41,9 +41,14 @@
           "action": "VIEW",
           "autoVerify": true,
           "data": [
-            { "scheme": "myapp" }
+            {
+              "scheme": "aitown"
+            }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -56,7 +61,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#0d0d0d",
+          "backgroundColor": "#0a0a14",
           "image": "./assets/splash-icon.png",
           "imageWidth": 200
         }
@@ -72,7 +77,8 @@
           "organization": "your-org"
         }
       ],
-      "@sentry/react-native"
+      "@sentry/react-native",
+      "expo-web-browser"
     ],
     "extra": {
       "router": {},

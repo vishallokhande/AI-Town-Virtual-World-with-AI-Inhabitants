@@ -7,7 +7,7 @@
  * the screens registered here.
  */
 import { Tabs } from 'expo-router'
-import { House, Compass, Bell, CircleUser } from 'lucide-react-native'
+import { Map, Users, Newspaper, CircleUser } from 'lucide-react-native'
 import TabBar, { TAB_BAR_HEIGHT } from '@/components/TabBar'
 import { BG } from '@/lib/theme'
 
@@ -18,16 +18,15 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         sceneStyle: { backgroundColor: BG },
-        // Extra bottom padding so content clears the floating tab bar
         tabBarStyle: { height: TAB_BAR_HEIGHT },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          tabBarLabel: 'Home',
+          tabBarLabel: 'Town',
           tabBarIcon: ({ color, size }) => (
-            <House size={size} color={color} strokeWidth={1.6} />
+            <Map size={size} color={color} strokeWidth={1.6} />
           ),
         }}
       />
@@ -35,9 +34,9 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          tabBarLabel: 'Explore',
+          tabBarLabel: 'Citizens',
           tabBarIcon: ({ color, size }) => (
-            <Compass size={size} color={color} strokeWidth={1.6} />
+            <Users size={size} color={color} strokeWidth={1.6} />
           ),
         }}
       />
@@ -45,9 +44,9 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="activity"
         options={{
-          tabBarLabel: 'Activity',
+          tabBarLabel: 'Events',
           tabBarIcon: ({ color, size }) => (
-            <Bell size={size} color={color} strokeWidth={1.6} />
+            <Newspaper size={size} color={color} strokeWidth={1.6} />
           ),
         }}
       />

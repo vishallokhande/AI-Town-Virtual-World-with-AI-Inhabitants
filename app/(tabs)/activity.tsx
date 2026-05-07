@@ -1,187 +1,210 @@
-import { useMemo, useState, useEffect } from 'react'
-import { View, ScrollView, StyleSheet, Pressable } from 'react-native'
+import { useState } from 'react'
+import { View, Pressable, StyleSheet, ScrollView } from 'react-native'
+import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Ionicons } from '@expo/vector-icons'
+import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated'
 import { Text } from '@/components/ui/Text'
-import { Card } from '@/components/ui/Card'
-import {
-    ACCENT,
-    BG,
-    BORDER,
-    TEXT_PRIMARY,
-    TEXT_SECONDARY,
-    TEXT_TERTIARY,
-} from '@/lib/theme'
-import { TAB_BAR_CLEARANCE } from '@/components/TabBar'
-import { useNotifications } from '@/hooks/useNotifications'
-import type { NotificationItem } from '@/lib/mockData'
+import { ACCENT, ACCENT_DIM, ACCENT_BORDER, BG, BORDER, SURFACE, SURFACE2 } from '@/lib/theme'
+import { townEvents, characters, TownEvent, EventKind, getCharacterById } from '@/lib/mockData'
+import { TAB_BAR_HEIGHT } from '@/components/TabBar'
 
-type TabType = 'all' | 'unread'
+const KIND_META: Record<EventKind, { label: string; color: string; bg: string }> = {
+    interaction: { label: 'Interaction', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
+    milestone:   { label: 'Milestone',   color: '#4ade80', bg: 'rgba(74,222,128,0.12)' },
+    story:       { label: 'Story',       color: '#a78bfa', bg: 'rgba(167,139,250,0.12)' },
+    memory:      { label: 'Memory',      color: '#38bdf8', bg: 'rgba(56,189,248,0.12)' },
+    conflict:    { label: 'Conflict',    color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
+    celebration: { label: 'Celebration', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)'  },
+}
 
-export default function ActivityScreen() {
-    const insets = useSafeAreaInsets()
-    const [activeTab, setActiveTab] = useState<TabType>('all')
-    const { data: remoteItems = [] } = useNotifications()
-    const [items, setItems] = useState<NotificationItem[]>(remoteItems)
+const FILTER_OPTIONS: { key: EventKind | 'all'; label: string }[] = [
+    { key: 'all', label: 'All' },
+    { key: 'interaction', label: '💬 Chat' },
+    { key: 'story', label: '📖 Story' },
+    { key: 'milestone', label: '⚡ Milestone' },
+    { key: 'celebration', label: '🎉 Celebrate' },
+    { key: 'conflict', label: '⚔️ Conflict' },
+    { key: 'memory', label: '💭 Memory' },
+]
 
-    // Sync local state when remote data arrives
-    useEffect(() => {
-        if (remoteItems.length > 0) setItems(remoteItems)
-    }, [remoteItems])
-
-    const visibleItems = useMemo(() => {
-        if (activeTab === 'all') return items
-        return items.filter((item) => !item.read)
-    }, [activeTab, items])
-
-    const unreadCount = useMemo(() => items.filter((item) => !item.read).length, [items])
-
-    const markAllRead = () => {
-        setItems((prev) => prev.map((item) => ({ ...item, read: true })))
-    }
-
-    const toggleRead = (id: string) => {
-        setItems((prev) => prev.map((item) => item.id === id ? { ...item, read: !item.read } : item))
-    }
+function EventCard({ event, index }: { event: TownEvent; index: number }) {
+    const meta = KIND_META[event.kind]
+    const chars = event.characterIds.map((id) => getCharacterById(id)).filter(Boolean)
 
     return (
-        <ScrollView
-            style={{ flex: 1, backgroundColor: BG }}
-            contentContainerStyle={[s.container, { paddingTop: insets.top + 16, paddingBottom: TAB_BAR_CLEARANCE + 16 }]}
-            showsVerticalScrollIndicator={false}
-        >
-            <View style={s.header}>
-                <View>
-                    <Text style={s.title}>Activity</Text>
-                    <Text style={s.subtitle}>Product updates, team events, and billing alerts.</Text>
+        <Animated.View entering={FadeInDown.delay(index * 55).duration(360)} style={[s.card, event.isNew && s.cardNew]}>
+            {/* Kind badge + time */}
+            <View style={s.cardTop}>
+                <View style={[s.kindBadge, { backgroundColor: meta.bg, borderColor: `${meta.color}40` }]}>
+                    <Text style={[s.kindText, { color: meta.color }]}>{event.emoji} {meta.label}</Text>
                 </View>
-
-                <Pressable onPress={markAllRead} style={({ pressed }) => [s.markAllBtn, pressed && { opacity: 0.75 }]}
-                >
-                    <Text style={s.markAllText}>Mark all read</Text>
-                </Pressable>
+                <View style={s.timeRow}>
+                    {event.isNew && <View style={s.newDot} />}
+                    <Text style={s.timeText}>{event.timeAgo}</Text>
+                </View>
             </View>
 
-            <View style={s.segmentRow}>
-                <Pressable
-                    onPress={() => setActiveTab('all')}
-                    style={[s.segmentItem, activeTab === 'all' && s.segmentItemActive]}
-                >
-                    <Text style={[s.segmentText, activeTab === 'all' && s.segmentTextActive]}>All ({items.length})</Text>
-                </Pressable>
-                <Pressable
-                    onPress={() => setActiveTab('unread')}
-                    style={[s.segmentItem, activeTab === 'unread' && s.segmentItemActive]}
-                >
-                    <Text style={[s.segmentText, activeTab === 'unread' && s.segmentTextActive]}>Unread ({unreadCount})</Text>
-                </Pressable>
-            </View>
+            {/* Title + detail */}
+            <Text style={s.title}>{event.title}</Text>
+            <Text style={s.detail}>{event.detail}</Text>
 
-            {visibleItems.length === 0 ? (
-                <Card style={s.emptyCard}>
-                    <Text style={s.emptyTitle}>You are all caught up</Text>
-                    <Text style={s.emptySub}>New alerts and updates will appear here.</Text>
-                </Card>
-            ) : (
-                <Card style={s.listCard}>
-                    {visibleItems.map((item, index) => (
-                        <Pressable
-                            key={item.id}
-                            onPress={() => toggleRead(item.id)}
-                            style={[s.row, index < visibleItems.length - 1 && s.rowDivider]}
-                        >
-                            <View style={[s.iconWrap, item.read && s.iconWrapMuted]}>
-                                <Ionicons name={categoryIcon(item.category)} size={14} color={item.read ? TEXT_SECONDARY : ACCENT} />
+            {/* Character avatars */}
+            {chars.length > 0 && (
+                <View style={s.charsRow}>
+                    <Text style={s.charsLabel}>Characters involved:</Text>
+                    <View style={s.avatarGroup}>
+                        {chars.slice(0, 5).map((c, i) => c && (
+                            <Pressable
+                                key={c.id}
+                                onPress={() => router.push(`/character/${c.id}` as any)}
+                                style={[s.avatar, { backgroundColor: `${c.accentColor}25`, borderColor: c.accentColor, marginLeft: i > 0 ? -10 : 0 }]}
+                            >
+                                <Text style={s.avatarEmoji}>{c.emoji}</Text>
+                            </Pressable>
+                        ))}
+                        {chars.length > 5 && (
+                            <View style={[s.avatar, s.avatarMore, { marginLeft: -10 }]}>
+                                <Text style={s.avatarMoreText}>+{chars.length - 5}</Text>
                             </View>
-
-                            <View style={{ flex: 1 }}>
-                                <Text style={[s.rowTitle, item.read && s.rowTitleMuted]}>{item.title}</Text>
-                                <Text style={s.rowBody}>{item.body}</Text>
-                                <Text style={s.rowTime}>{item.timeAgo}</Text>
-                            </View>
-
-                            {!item.read && <View style={s.unreadDot} />}
-                        </Pressable>
-                    ))}
-                </Card>
+                        )}
+                        <View style={s.charNames}>
+                            {chars.slice(0, 3).map((c, i) => c && (
+                                <Text key={c.id} style={[s.charNameText, { color: c.accentColor }]}>
+                                    {c.name}{i < Math.min(chars.length, 3) - 1 ? ', ' : chars.length > 3 ? '…' : ''}
+                                </Text>
+                            ))}
+                        </View>
+                    </View>
+                </View>
             )}
-        </ScrollView>
+
+            {/* Read more / chat */}
+            {chars.length > 0 && (
+                <Pressable
+                    onPress={() => router.push(`/character/${event.characterIds[0]}` as any)}
+                    style={s.ctaRow}
+                >
+                    <Text style={s.ctaText}>💬 Talk to {getCharacterById(event.characterIds[0])?.name ?? 'character'} about this →</Text>
+                </Pressable>
+            )}
+        </Animated.View>
     )
 }
 
-function categoryIcon(category: 'billing' | 'system' | 'product' | 'team') {
-    switch (category) {
-        case 'billing':
-            return 'wallet-outline'
-        case 'system':
-            return 'server-outline'
-        case 'product':
-            return 'sparkles-outline'
-        case 'team':
-            return 'people-outline'
-        default:
-            return 'ellipse-outline'
-    }
+export default function EventsScreen() {
+    const insets = useSafeAreaInsets()
+    const [filter, setFilter] = useState<EventKind | 'all'>('all')
+
+    const filtered = filter === 'all' ? townEvents : townEvents.filter((e) => e.kind === filter)
+    const newCount = townEvents.filter((e) => e.isNew).length
+
+    return (
+        <View style={{ flex: 1, backgroundColor: BG }}>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: TAB_BAR_HEIGHT + 24 }}
+            >
+                {/* Header */}
+                <Animated.View entering={FadeInDown.duration(340)} style={s.header}>
+                    <View>
+                        <Text style={s.heading}>📰 Town Events</Text>
+                        <Text style={s.subheading}>Living stories from Willowvale</Text>
+                    </View>
+                    {newCount > 0 && (
+                        <View style={s.newBadge}>
+                            <Text style={s.newBadgeText}>{newCount} new</Text>
+                        </View>
+                    )}
+                </Animated.View>
+
+                {/* Filter chips */}
+                <Animated.View entering={FadeInDown.delay(60).duration(340)} style={{ paddingLeft: 20, marginBottom: 20 }}>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: 20 }}>
+                        {FILTER_OPTIONS.map((opt) => {
+                            const isActive = filter === opt.key
+                            const meta = opt.key !== 'all' ? KIND_META[opt.key] : null
+                            return (
+                                <Pressable
+                                    key={opt.key}
+                                    onPress={() => setFilter(opt.key)}
+                                    style={[
+                                        s.chip,
+                                        isActive && meta && { backgroundColor: meta.bg, borderColor: `${meta.color}50` },
+                                        isActive && !meta && { backgroundColor: ACCENT_DIM, borderColor: ACCENT_BORDER },
+                                    ]}
+                                >
+                                    <Text style={[
+                                        s.chipText,
+                                        isActive && meta && { color: meta.color },
+                                        isActive && !meta && { color: ACCENT },
+                                    ]}>
+                                        {opt.label}
+                                    </Text>
+                                </Pressable>
+                            )
+                        })}
+                    </ScrollView>
+                </Animated.View>
+
+                {/* Event cards */}
+                <View style={s.cards}>
+                    {filtered.map((event, i) => (
+                        <EventCard key={event.id} event={event} index={i} />
+                    ))}
+                </View>
+
+                {filtered.length === 0 && (
+                    <Animated.View entering={FadeIn.duration(300)} style={s.empty}>
+                        <Text style={s.emptyEmoji}>🌙</Text>
+                        <Text style={s.emptyText}>No events of this type yet</Text>
+                        <Text style={s.emptyHint}>Check back as your characters interact</Text>
+                    </Animated.View>
+                )}
+            </ScrollView>
+        </View>
+    )
 }
 
 const s = StyleSheet.create({
-    container: { paddingHorizontal: 20, gap: 12 },
-    header: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' },
-    title: { fontSize: 24, fontWeight: '800', color: TEXT_PRIMARY, letterSpacing: -0.5 },
-    subtitle: { marginTop: 3, fontSize: 13, color: TEXT_SECONDARY },
-    markAllBtn: {
-        borderWidth: 1,
-        borderColor: BORDER,
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        paddingHorizontal: 10,
-        paddingVertical: 7,
-        borderRadius: 9,
-    },
-    markAllText: { fontSize: 12, color: TEXT_PRIMARY, fontWeight: '600' },
-    segmentRow: {
-        flexDirection: 'row',
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        borderWidth: 1,
-        borderColor: BORDER,
-        borderRadius: 11,
-        padding: 3,
-    },
-    segmentItem: {
-        flex: 1,
-        borderRadius: 8,
-        alignItems: 'center',
-        paddingVertical: 7,
-    },
-    segmentItemActive: {
-        backgroundColor: 'rgba(255,255,255,0.14)',
-    },
-    segmentText: { fontSize: 12, color: TEXT_SECONDARY, fontWeight: '600' },
-    segmentTextActive: { color: TEXT_PRIMARY },
-    emptyCard: { alignItems: 'center', gap: 5, paddingVertical: 26 },
-    emptyTitle: { fontSize: 15, color: TEXT_PRIMARY, fontWeight: '700' },
-    emptySub: { fontSize: 13, color: TEXT_SECONDARY },
-    listCard: { paddingVertical: 2, paddingHorizontal: 0 },
-    row: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingHorizontal: 12, paddingVertical: 11 },
-    rowDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: BORDER },
-    iconWrap: {
-        width: 28,
-        height: 28,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 1,
-        backgroundColor: 'rgba(255,255,255,0.10)',
-    },
-    iconWrapMuted: { backgroundColor: 'rgba(255,255,255,0.05)' },
-    rowTitle: { fontSize: 13.5, color: TEXT_PRIMARY, fontWeight: '700' },
-    rowTitleMuted: { color: TEXT_SECONDARY },
-    rowBody: { marginTop: 1, fontSize: 12.5, lineHeight: 18, color: TEXT_SECONDARY },
-    rowTime: { marginTop: 5, fontSize: 11, color: TEXT_TERTIARY },
-    unreadDot: {
-        width: 7,
-        height: 7,
-        borderRadius: 999,
-        marginTop: 6,
-        backgroundColor: ACCENT,
-    },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 16 },
+    heading: { color: '#fff', fontSize: 26, fontWeight: '800', letterSpacing: -0.6 },
+    subheading: { color: 'rgba(255,255,255,0.42)', fontSize: 13.5, marginTop: 2 },
+    newBadge: { backgroundColor: ACCENT_DIM, borderWidth: 1, borderColor: ACCENT_BORDER, borderRadius: 99, paddingHorizontal: 12, paddingVertical: 6 },
+    newBadgeText: { color: ACCENT, fontSize: 12, fontWeight: '700' },
+
+    chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 99, backgroundColor: SURFACE, borderWidth: 1, borderColor: BORDER },
+    chipText: { color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: '600' },
+
+    cards: { paddingHorizontal: 20, gap: 14 },
+
+    card: { backgroundColor: SURFACE, borderRadius: 20, borderWidth: 1, borderColor: BORDER, padding: 16, gap: 10 },
+    cardNew: { borderColor: 'rgba(245,158,11,0.25)', backgroundColor: 'rgba(245,158,11,0.04)' },
+    cardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    kindBadge: { borderWidth: 1, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 4 },
+    kindText: { fontSize: 11, fontWeight: '700' },
+    timeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    newDot: { width: 7, height: 7, borderRadius: 99, backgroundColor: ACCENT },
+    timeText: { color: 'rgba(255,255,255,0.35)', fontSize: 11.5 },
+
+    title: { color: '#fff', fontSize: 16, fontWeight: '800', letterSpacing: -0.3, lineHeight: 22 },
+    detail: { color: 'rgba(255,255,255,0.58)', fontSize: 13, lineHeight: 20 },
+
+    charsRow: { gap: 8 },
+    charsLabel: { color: 'rgba(255,255,255,0.32)', fontSize: 10.5, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8 },
+    avatarGroup: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 0 },
+    avatar: { width: 32, height: 32, borderRadius: 99, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5 },
+    avatarEmoji: { fontSize: 14 },
+    avatarMore: { backgroundColor: SURFACE2, borderColor: BORDER },
+    avatarMoreText: { color: 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: '700' },
+    charNames: { flexDirection: 'row', flexWrap: 'wrap', marginLeft: 10, flex: 1 },
+    charNameText: { fontSize: 12, fontWeight: '700' },
+
+    ctaRow: { backgroundColor: SURFACE2, borderRadius: 10, padding: 10, marginTop: 2 },
+    ctaText: { color: ACCENT, fontSize: 12.5, fontWeight: '600' },
+
+    empty: { alignItems: 'center', paddingTop: 60, gap: 10 },
+    emptyEmoji: { fontSize: 44 },
+    emptyText: { color: 'rgba(255,255,255,0.5)', fontSize: 16, fontWeight: '700' },
+    emptyHint: { color: 'rgba(255,255,255,0.28)', fontSize: 13 },
 })
+

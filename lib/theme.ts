@@ -12,21 +12,21 @@
  */
 
 // ── Primary brand color ───────────────────────────────────────────────────────
-// 🎨 Change this one value to rebrand the whole app
-export const ACCENT = '#0ea5a4'           // teal — swap to your primary brand color
+// 🎨 AI Town warm amber — evokes lantern light, harvest festival, cozy village
+export const ACCENT = '#F59E0B'           // warm amber
 
 // Derived from ACCENT — adjust opacity as needed
-export const ACCENT_DIM = 'rgba(14,165,164,0.12)'
-export const ACCENT_BORDER = 'rgba(14,165,164,0.30)'
-export const ACCENT_GLOW = 'rgba(14,165,164,0.20)'
+export const ACCENT_DIM = 'rgba(245,158,11,0.12)'
+export const ACCENT_BORDER = 'rgba(245,158,11,0.30)'
+export const ACCENT_GLOW = 'rgba(245,158,11,0.22)'
 // Text color on dark background using accent tone
-export const ACCENT_LIGHT = '#5eead4'
+export const ACCENT_LIGHT = '#FCD34D'
 
 // ── Backgrounds ───────────────────────────────────────────────────────────────
-export const BG = '#0d0d0d'        // main app background
-export const SURFACE = '#1a1a1a'        // cards, inputs
-export const SURFACE2 = '#242424'        // elevated surface (sheet panels, etc.)
-export const SURFACE3 = '#2e2e2e'        // even more elevated
+export const BG = '#0a0a14'        // deep night sky — dark navy-black
+export const SURFACE = '#13131f'        // cards, inputs
+export const SURFACE2 = '#1c1c2e'        // elevated surface (sheet panels, etc.)
+export const SURFACE3 = '#252538'        // even more elevated
 
 // ── Text ──────────────────────────────────────────────────────────────────────
 export const TEXT_PRIMARY = '#ffffff'

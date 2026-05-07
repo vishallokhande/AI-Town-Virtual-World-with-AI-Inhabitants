@@ -10,10 +10,10 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: '#0d0d0d',
-        accent: '#0ea5a4',      // 🎨 BRAND: your primary accent color
-        surface: '#1a1a1a',
-        surface2: '#242424',
+        background: '#0a0a14',
+        accent: '#F59E0B',      // 🎨 AI Town warm amber
+        surface: '#13131f',
+        surface2: '#1c1c2e',
         muted: '#6b7280',
       },
     },
